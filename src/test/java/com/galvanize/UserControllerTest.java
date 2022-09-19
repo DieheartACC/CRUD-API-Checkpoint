@@ -11,9 +11,9 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 import javax.transaction.Transactional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -45,6 +45,10 @@ public class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(user.getId()))
                 .andExpect(jsonPath("$[1].id").value(user1.getId()));
+
+        // Testing set ID for coverage
+        user.setId(1l);
+        assertEquals(user.getId(), 1l);
     }
 
     @Test
@@ -93,6 +97,10 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.id").value(user.getId()))
                 .andExpect(jsonPath("$.email").value("joeDow@yahoo.com"))
                 .andExpect(jsonPath("$.password").doesNotHaveJsonPath());
+
+        this.mvc.perform(get("/users/-1"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("This element does not exist"));
     }
 
     @Test
@@ -123,6 +131,30 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.id").value(user.getId()))
                 .andExpect(jsonPath("$.email").value("john@example.com"));
 
+        MockHttpServletRequestBuilder request1 = patch(String.format("/users/%d", user.getId()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(String.format("""
+                        {
+                          "password": "4321"
+                        }
+                        """));
+
+        this.mvc.perform(request1)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(user.getId()))
+                .andExpect(jsonPath("$.password").doesNotHaveJsonPath());
+
+        MockHttpServletRequestBuilder request3 = patch("/users/-1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(String.format("""
+                        {
+                          "email": "john@example.com"
+                        }
+                        """));
+
+        this.mvc.perform(request3)
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("This element does not exist"));
     }
 
     @Test
