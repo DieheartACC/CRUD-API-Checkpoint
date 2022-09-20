@@ -44,7 +44,9 @@ public class UserControllerTest {
         this.mvc.perform(request)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(user.getId()))
-                .andExpect(jsonPath("$[1].id").value(user1.getId()));
+                .andExpect(jsonPath("$[1].id").value(user1.getId()))
+                .andExpect(jsonPath("$[0].password").doesNotHaveJsonPath())
+                .andExpect(jsonPath("$[1].password").doesNotHaveJsonPath());
 
         // Testing set ID for coverage
         user.setId(1l);
@@ -135,6 +137,7 @@ public class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(String.format("""
                         {
+                          "email": "john@example.com",
                           "password": "4321"
                         }
                         """));
